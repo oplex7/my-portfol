@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8">
+  <title>Login - Vulnerable Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; direction: rtl; }
+    .box { max-width: 420px; margin: auto; border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+    input { width: 100%; padding: 8px; margin: 8px 0; }
+    .note { font-size: 14px; color: #555; }
+    .vuln { color: darkred; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>نموذج تسجيل دخول (تجريبي - ضعيف أمنياً)</h2>
+
+    <!-- Warning: this form is intentionally insecure for learning -->
+    <form id="loginForm" action="#" method="POST">
+      <label>اسم المستخدم</label>
+      <input id="user" name="username" placeholder="ادخل اسم المستخدم">
+
+      <label>كلمة المرور</label>
+      <!-- Vulnerability: password stored in plain text attribute for demo -->
+      <input id="pass" name="password" type="text" placeholder="ادخل كلمة المرور">
+
+      <button type="submit">دخول</button>
+    </form>
+
+    <p class="note">ملاحظة: هذه الصفحة تحتوي أخطاء أمنية مقصودة للتعلّم.</p>
+
+    <h3>نتيجة (محلية)</h3>
+    <div id="result"></div>
+
+    <hr>
+    <h4>شرح المشاكل المكتشفة</h4>
+    <ul>
+      <li class="vuln">1. كلمة المرور حقل من النوع text — تظهر عادي ومخزنة في الDOM.</li>
+      <li class="vuln">2. لا يوجد أي تحقق على السيرفر (simulated) — كل شيء في الجافاسكربت فقط.</li>
+      <li class="vuln">3. لا يتم ترشيح أو فحص الإدخال → ممكِن XSS عند عرض المدخلات مباشرة.</li>
+      <li class="vuln">4. لا استخدام HTTPS أو حماية جلسات هنا (لأنها demo محلي).</li>
+    </ul>
+
+    <h4>كيف نصلحها؟</h4>
+    <ol>
+      <li>غيّر input type لكلمة المرور إلى <code>password</code>.</li>
+      <li>لا تعتمد على فحص من جانب العميل فقط؛ أضف تحقق وتخزين آمن على السيرفر (هاش + salt).</li>
+      <li>هاتقّى إخراج النصوص باستخدام escaping/encoding قبل العرض لمنع XSS.</li>
+      <li>استخدم HTTPS، وحدّد سياسات CORS، وحط قيود على محاولات الدخول (rate limiting).</li>
+    </ol>
+  </div>
+
+  <script>
+    // هذه المحاكاة تعرض المدخلات كما هي (تؤدي إلى XSS إذا قمت بإدخال html/JS)
+    document.getElementById('loginForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const user = document.getElementById('user').value;
+      const pass = document.getElementById('pass').value;
+      // Intentional insecure display:
+      document.getElementById('result').innerHTML =
+        '<strong>اسم المستخدم:</strong> ' + user + '<br>' +
+        '<strong>كلمة المرور:</strong> ' + pass +
+        '<p class="note">هذه نتيجة محلية فقط — لا تستخدم على سيرفر حقيقي.</p>';
+    });
+  </script>
+</body>
+</html>
